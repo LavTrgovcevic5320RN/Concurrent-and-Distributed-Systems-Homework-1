@@ -1,7 +1,6 @@
 package main.tasks;
 
 import main.matrix.MatrixBrain;
-import main.matrix.MatrixMultiplier;
 import main.models.MyMatrix;
 import main.models.Task;
 import main.models.TaskType;
@@ -12,7 +11,6 @@ import java.util.concurrent.Executors;
 public class TaskCoordinator implements Runnable {
     private TaskQueue taskQueue;
     private ExecutorService executorService;
-    private MatrixMultiplier multiplierThreadPool;
     private MatrixBrain matrixBrain;
     private long segmentSize;
     private long maxRowsSize;
@@ -20,7 +18,6 @@ public class TaskCoordinator implements Runnable {
     public TaskCoordinator(TaskQueue taskQueue, long segmentSize, long maxRowsSize, MatrixBrain matrixBrain) {
         this.taskQueue = taskQueue;
         this.executorService = Executors.newCachedThreadPool();
-        this.multiplierThreadPool = new MatrixMultiplier();
         this.matrixBrain = matrixBrain;
         this.segmentSize = segmentSize;
     }
@@ -67,14 +64,6 @@ public class TaskCoordinator implements Runnable {
 
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;
-    }
-
-    public MatrixMultiplier getMultiplierThreadPool() {
-        return multiplierThreadPool;
-    }
-
-    public void setMultiplierThreadPool(MatrixMultiplier multiplierThreadPool) {
-        this.multiplierThreadPool = multiplierThreadPool;
     }
 
     public MatrixBrain getMatrixBrain() {

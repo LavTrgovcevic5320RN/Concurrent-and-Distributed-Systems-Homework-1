@@ -13,9 +13,11 @@ public class SystemExplorer implements Runnable {
     private TaskQueue taskQueue;
     private File[] directoriesToExplore = new File[0];
     private boolean firstRun = true;
+    private long systemExplorerSleepTime;
 
-    public SystemExplorer(TaskQueue taskQueue) {
+    public SystemExplorer(TaskQueue taskQueue, long systemExplorerSleepTime) {
         this.taskQueue = taskQueue;
+        this.systemExplorerSleepTime = systemExplorerSleepTime;
     }
 
     public void addDirectory(File directory) {
@@ -34,7 +36,7 @@ public class SystemExplorer implements Runnable {
             exploreDirectories();
 
             try {
-                Thread.sleep(1000); // Sleep for 10 second (adjust as needed)
+                Thread.sleep(systemExplorerSleepTime); // Sleep for 10 second (adjust as needed)
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

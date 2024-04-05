@@ -1,6 +1,7 @@
 package main;
 
 import main.matrix.MatrixBrain;
+import main.tasks.MatrixMultiplierTask;
 import main.tasks.TaskCoordinator;
 import main.tasks.TaskQueue;
 
@@ -12,33 +13,37 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class MainCLI implements Runnable {
 
-    private static Integer sysExplorerSleepTime;
-    private static Integer maxFileChunkSize;
+    private static Long sysExplorerSleepTime;
+    private static Long maxFileChunkSize;
     private static Integer maxRowsSize;
     private static TaskQueue taskQueue;
     private static TaskCoordinator taskCoordinator;
     private static SystemExplorer systemExplorer;
     private static MatrixBrain matrixBrain;
-//    ExecutorService es = Executors.newFixedThreadPool(1);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         readConfiguration();
         taskQueue = new TaskQueue();
-        taskCoordinator = new TaskCoordinator(taskQueue, maxFileChunkSize, maxRowsSize);
-        systemExplorer = new SystemExplorer(taskQueue);
         matrixBrain = new MatrixBrain(taskQueue);
+        taskCoordinator = new TaskCoordinator(taskQueue, maxFileChunkSize, maxRowsSize, matrixBrain);
+        systemExplorer = new SystemExplorer(taskQueue, sysExplorerSleepTime);
 
+        MainCLI mainCLI = new MainCLI();
         Thread coordinatorThread = new Thread(taskCoordinator);
         Thread explorerThread = new Thread(systemExplorer);
-        MainCLI mainCLI = new MainCLI();
         Thread mainThread = new Thread(mainCLI);
 
         coordinatorThread.start();
         explorerThread.start();
         mainThread.start();
+
+        coordinatorThread.join();
+        explorerThread.join();
+        mainThread.join();
 //        taskQueue = new TaskQueue();
 //        taskCoordinator = new TaskCoordinator(taskQueue);
 //        systemExplorer = new SystemExplorer(taskQueue);
@@ -85,10 +90,12 @@ public class MainCLI implements Runnable {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private static void processCommand(String command) {
+    private static void processCommand(String command) throws InterruptedException, ExecutionException {
         if (command.startsWith("dir")) {
             String[] parts = command.split(" ");
             if (parts.length == 2) {
@@ -104,10 +111,11 @@ public class MainCLI implements Runnable {
                 System.out.println("Error: Invalid command format");
             }
 
-        } else if (command.contains("multiply")) { // ex. multiply A1,c1
+        } else if (command.contains("multiply") && !command.contains("-async")) { // ex. multiply A1,c1
             String[] parts = command.split(" ");
             String[] matrice = parts[1].split(",");
             matrixBrain.multiplyMatrices(matrice[0], matrice[1]);
+
 
         } else if (command.equalsIgnoreCase("help")) {
             System.out.println("Available commands:");
@@ -130,8 +138,8 @@ public class MainCLI implements Runnable {
                     .map(line -> line.split("="))
                     .forEach(parts -> dataMap.put(parts[0].trim(), parts[1].trim()));
 
-            sysExplorerSleepTime = Integer.valueOf(dataMap.get("sys_explorer_sleep_time"));
-            maxFileChunkSize = Integer.valueOf(dataMap.get("maximum_file_chunk_size"));
+            sysExplorerSleepTime = Long.valueOf(dataMap.get("sys_explorer_sleep_time"));
+            maxFileChunkSize = Long.valueOf(dataMap.get("maximum_file_chunk_size"));
             maxRowsSize = Integer.valueOf(dataMap.get("maximum_rows_size"));
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,9 +1,6 @@
 package main.tasks;
 
-import lombok.Getter;
-import lombok.Setter;
 import main.matrix.MatrixBrain;
-import main.matrix.MatrixExtractor;
 import main.matrix.MatrixMultiplier;
 import main.models.MyMatrix;
 import main.models.Task;
@@ -12,28 +9,24 @@ import main.models.TaskType;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Getter
-@Setter
 public class TaskCoordinator implements Runnable {
     private TaskQueue taskQueue;
     private ExecutorService executorService;
-    private MatrixExtractor extractorThreadPool;
     private MatrixMultiplier multiplierThreadPool;
     private MatrixBrain matrixBrain;
     private long segmentSize;
     private long maxRowsSize;
 
-    public TaskCoordinator(TaskQueue taskQueue, long segmentSize, long maxRowsSize) {
+    public TaskCoordinator(TaskQueue taskQueue, long segmentSize, long maxRowsSize, MatrixBrain matrixBrain) {
         this.taskQueue = taskQueue;
         this.executorService = Executors.newCachedThreadPool();
-        this.extractorThreadPool = new MatrixExtractor(taskQueue);
         this.multiplierThreadPool = new MatrixMultiplier();
-        this.matrixBrain = new MatrixBrain(taskQueue);
+        this.matrixBrain = matrixBrain;
         this.segmentSize = segmentSize;
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         while (true) {
             Task task = taskQueue.getNextTask();
             if (task != null) {
@@ -42,19 +35,16 @@ public class TaskCoordinator implements Runnable {
                         if (task.getType() == TaskType.CREATE) {
                             ((MatrixFileTask)task).setSegmentSize(segmentSize);
                             MyMatrix myMatrix = task.initiate().get();
+                            System.out.println("Matrix " + myMatrix.getName() + " created");
                             matrixBrain.addMatrix(myMatrix);
-                            System.out.println("Matrica kreirana");
-//                                extractorThreadPool.extractMatrixFromFile(((MatrixFileTask) task).getFile(), task);
+                            taskQueue.addTask(new MatrixMultiplierTask(myMatrix, myMatrix));
 
                         } else if (task.getType() == TaskType.MULTIPLY) {
                             MyMatrix result = task.initiate().get();
-                            matrixBrain.displayMatrix(result);
-//                            matrixBrain.addMatrix(result);
-//                            System.out.println("Matrice pomnozene");
-//                            multiplierThreadPool.submitMultiplicationTask(((MatrixMultiplierTask) task).getMatrixA(), ((MatrixMultiplierTask) task).getMatrixB());
+//                            matrixBrain.displayMatrix(result);
+                            matrixBrain.addMatrix(result);
                         }
                     } catch (Exception e) {
-//                        Thread.currentThread().interrupt();
                         e.printStackTrace();
                         System.err.println("Task Coordinator interrupted.");
                     }
@@ -63,5 +53,52 @@ public class TaskCoordinator implements Runnable {
         }
     }
 
+    public TaskQueue getTaskQueue() {
+        return taskQueue;
+    }
+
+    public void setTaskQueue(TaskQueue taskQueue) {
+        this.taskQueue = taskQueue;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
+
+    public MatrixMultiplier getMultiplierThreadPool() {
+        return multiplierThreadPool;
+    }
+
+    public void setMultiplierThreadPool(MatrixMultiplier multiplierThreadPool) {
+        this.multiplierThreadPool = multiplierThreadPool;
+    }
+
+    public MatrixBrain getMatrixBrain() {
+        return matrixBrain;
+    }
+
+    public void setMatrixBrain(MatrixBrain matrixBrain) {
+        this.matrixBrain = matrixBrain;
+    }
+
+    public long getSegmentSize() {
+        return segmentSize;
+    }
+
+    public void setSegmentSize(long segmentSize) {
+        this.segmentSize = segmentSize;
+    }
+
+    public long getMaxRowsSize() {
+        return maxRowsSize;
+    }
+
+    public void setMaxRowsSize(long maxRowsSize) {
+        this.maxRowsSize = maxRowsSize;
+    }
 }
 

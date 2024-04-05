@@ -1,14 +1,10 @@
 package main.tasks;
 
-import lombok.Getter;
-import lombok.Setter;
 import main.models.Task;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-@Getter
-@Setter
 public class TaskQueue {
 
     private BlockingQueue<Task> queue;

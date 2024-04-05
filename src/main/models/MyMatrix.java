@@ -1,14 +1,9 @@
 package main.models;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.io.File;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-@Getter
-@Setter
 public class MyMatrix {
     private String name;
     private int rows;
@@ -47,5 +42,59 @@ public class MyMatrix {
             }
             System.out.println();
         }
+    }
+
+    public static MyMatrix multiplySegment(MyMatrix A, MyMatrix B, int startRow, int endRow, int startCol, int endCol) {
+        MyMatrix result = new MyMatrix("Segment", endRow - startRow, endCol - startCol);
+        for (int i = startRow; i < endRow; i++) {
+            for (int j = startCol; j < endCol; j++) {
+                BigInteger sum = BigInteger.ZERO;
+                for (int k = 0; k < A.cols; k++) {
+                    sum = sum.add(A.values[i][k].multiply(B.values[k][j]));
+                }
+                result.setValue(i - startRow, j - startCol, sum);
+            }
+        }
+        return result;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public void setRows(int rows) {
+        this.rows = rows;
+    }
+
+    public int getCols() {
+        return cols;
+    }
+
+    public void setCols(int cols) {
+        this.cols = cols;
+    }
+
+    public File getMatrixFile() {
+        return matrixFile;
+    }
+
+    public void setMatrixFile(File matrixFile) {
+        this.matrixFile = matrixFile;
+    }
+
+    public BigInteger[][] getValues() {
+        return values;
+    }
+
+    public void setValues(BigInteger[][] values) {
+        this.values = values;
     }
 }

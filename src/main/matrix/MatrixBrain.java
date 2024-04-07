@@ -69,7 +69,7 @@ public class MatrixBrain {
                 for (int i = 0; i < matrix.getRows(); i++) {
                     writer.println(i + "," + j + " = " + matrix.getValue(i, j) + " ");
                 }
-                writer.println();
+//                writer.println();
             }
             writer.flush();
         } catch (IOException e) {

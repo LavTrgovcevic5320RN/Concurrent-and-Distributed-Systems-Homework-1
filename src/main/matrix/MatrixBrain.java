@@ -91,6 +91,20 @@ public class MatrixBrain {
         }
     }
 
+    private void printMatrixInfo(String matrixName) {
+        for (MyMatrix matrix : matrices) {
+            if (matrix.getName().equals(matrixName)) {
+                System.out.println("Matrix Name: " + matrix.getName());
+                System.out.println("Rows: " + matrix.getRows());
+                System.out.println("Columns: " + matrix.getCols());
+                System.out.println("File Location: " + matrix.getMatrixFile());
+                System.out.println();
+                return;
+            }
+        }
+        System.out.println("Matrix not found: " + matrixName);
+    }
+
     public void clearMatrices(String fileName) {
         for(MyMatrix matrix : matrices) {
             if(matrix.getName().contains(fileName.toUpperCase())) {
@@ -118,5 +132,36 @@ public class MatrixBrain {
         String secondHalf = name.substring(name.length() / 2);
 
         return firstHalf.equals(secondHalf);
+    }
+
+    // U MatrixBrain klasi
+    public void displayMatrixInfo(String matrixName) {
+        printMatrixInfo(matrixName);
+    }
+
+    public void displayAllMatrices() {
+        for (MyMatrix matrix : matrices) {
+            printMatrixInfo(matrix.getName());
+        }
+    }
+
+    public void displayMatricesSorted(boolean ascending) {
+        matrices.stream()
+                .sorted((m1, m2) -> {
+                    int rowCompare = Integer.compare(m1.getRows(), m2.getRows());
+                    if (rowCompare != 0) {
+                        return ascending ? rowCompare : -rowCompare;
+                    }
+                    return ascending ? Integer.compare(m1.getCols(), m2.getCols()) : -Integer.compare(m1.getCols(), m2.getCols());
+                })
+                .forEach(matrix -> printMatrixInfo(matrix.getName()));
+    }
+
+    public void displayFirstNMatrices(int n) {
+        matrices.stream().limit(n).forEach(matrix -> printMatrixInfo(matrix.getName()));
+    }
+
+    public void displayLastNMatrices(int n) {
+        matrices.stream().skip(Math.max(0, matrices.size() - n)).forEach(matrix -> printMatrixInfo(matrix.getName()));
     }
 }

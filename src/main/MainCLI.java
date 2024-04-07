@@ -133,7 +133,30 @@ public class MainCLI implements Runnable {
             } else {
                 System.out.println("Error: Invalid clear command format");
             }
-        }else if (command.equalsIgnoreCase("help")) {
+        } else if (command.startsWith("info")) {
+            String[] parts = command.split(" ");
+            if (parts.length == 2) {
+                if (parts[1].equals("-all")) {
+                    matrixBrain.displayAllMatrices();
+                } else if (parts[1].equals("-asc")) {
+                    System.out.println("Ascending order");
+                    matrixBrain.displayMatricesSorted(true);
+                } else if (parts[1].equals("-desc")) {
+                    System.out.println("Descending order");
+                    matrixBrain.displayMatricesSorted(false);
+                } else if (parts[1].startsWith("-s")) {
+                    int n = Integer.parseInt(parts[1].substring(2));
+                    matrixBrain.displayFirstNMatrices(n);
+                } else if (parts[1].startsWith("-e")) {
+                    int n = Integer.parseInt(parts[1].substring(2));
+                    matrixBrain.displayLastNMatrices(n);
+                } else {
+                    matrixBrain.displayMatrixInfo(parts[1]);
+                }
+            } else {
+                System.out.println("Error: Invalid info command format");
+            }
+        } else if (command.equalsIgnoreCase("help")) {
             System.out.println("Available commands:");
             System.out.println(" - dir <dir_name>: Add directory to search");
             System.out.println(" - help: Display help information");
@@ -161,6 +184,4 @@ public class MainCLI implements Runnable {
             e.printStackTrace();
         }
     }
-
-
 }

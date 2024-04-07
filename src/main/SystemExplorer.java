@@ -14,6 +14,7 @@ public class SystemExplorer implements Runnable {
     private File[] directoriesToExplore = new File[0];
     private boolean firstRun = true;
     private long systemExplorerSleepTime;
+    private boolean running = true;
 
     public SystemExplorer(TaskQueue taskQueue, long systemExplorerSleepTime) {
         this.taskQueue = taskQueue;
@@ -21,7 +22,6 @@ public class SystemExplorer implements Runnable {
     }
 
     public void addDirectory(File directory) {
-        // Add directory to the list of directories to explore
         File[] newDirectoriesToExplore = new File[directoriesToExplore.length + 1];
         System.arraycopy(directoriesToExplore, 0, newDirectoriesToExplore, 0, directoriesToExplore.length);
         newDirectoriesToExplore[directoriesToExplore.length] = directory;
@@ -31,12 +31,12 @@ public class SystemExplorer implements Runnable {
     @Override
     public void run() {
         exploreDirectories();
-        firstRun = false; // After the first exploration, set firstRun flag to false
-        while (true) {
+        firstRun = false;
+        while (running) {
             exploreDirectories();
 
             try {
-                Thread.sleep(systemExplorerSleepTime); // Sleep for 10 second (adjust as needed)
+                Thread.sleep(systemExplorerSleepTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -49,7 +49,7 @@ public class SystemExplorer implements Runnable {
         }
     }
 
-    private void exploreDirectory(File directory) {
+    public void exploreDirectory(File directory) {
         if (!directory.isDirectory()) {
             return;
         }
@@ -73,20 +73,64 @@ public class SystemExplorer implements Runnable {
         long lastModified = file.lastModified();
         if (!firstRun && fileLastModifiedMap.containsKey(file)) {
             if (fileLastModifiedMap.get(file) == lastModified) {
-//                System.out.println("File not modified: " + file.getAbsolutePath());
                 return;
             }
-//            System.out.println("File modified: " + file.getAbsolutePath());
-//            taskQueue.removeTasksByFile(file);
         }
 
-        // Update last modified time
         fileLastModifiedMap.put(file, lastModified);
 
-        // Create task for the file
         MatrixFileTask matrixFileTask = new MatrixFileTask(file);
         taskQueue.addTask(matrixFileTask);
         System.out.println("Found matrix file|" + file.getName());
+    }
+
+    public SystemExplorer setRunning(boolean running) {
+        this.running = running;
+        return this;
+    }
+
+    public void recollectDataFromFile(String argument) {
+
+    }
+
+    public Map<File, Long> getFileLastModifiedMap() {
+        return fileLastModifiedMap;
+    }
+
+    public TaskQueue getTaskQueue() {
+        return taskQueue;
+    }
+
+    public void setTaskQueue(TaskQueue taskQueue) {
+        this.taskQueue = taskQueue;
+    }
+
+    public File[] getDirectoriesToExplore() {
+        return directoriesToExplore;
+    }
+
+    public void setDirectoriesToExplore(File[] directoriesToExplore) {
+        this.directoriesToExplore = directoriesToExplore;
+    }
+
+    public boolean isFirstRun() {
+        return firstRun;
+    }
+
+    public void setFirstRun(boolean firstRun) {
+        this.firstRun = firstRun;
+    }
+
+    public long getSystemExplorerSleepTime() {
+        return systemExplorerSleepTime;
+    }
+
+    public void setSystemExplorerSleepTime(long systemExplorerSleepTime) {
+        this.systemExplorerSleepTime = systemExplorerSleepTime;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }
 

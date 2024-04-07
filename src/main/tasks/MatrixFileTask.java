@@ -110,4 +110,5 @@ public class MatrixFileTask implements Task {
     public void setSegmentSize(long segmentSize) {
         this.segmentSize = segmentSize;
     }
+
 }

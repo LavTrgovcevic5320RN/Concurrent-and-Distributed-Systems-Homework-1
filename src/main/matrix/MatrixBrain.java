@@ -4,12 +4,13 @@ import main.models.MyMatrix;
 import main.tasks.MatrixMultiplierTask;
 import main.tasks.TaskQueue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 
 public class MatrixBrain {
 
@@ -20,28 +21,18 @@ public class MatrixBrain {
         this.taskQueue = taskQueue;
     }
 
-    public synchronized void addMatrix(MyMatrix matrix) {
-            matrices.add(matrix);
-        if(matrix.getName().equals("A1C1"))
-            displayMatrix(matrix);
+    public void addMatrix(MyMatrix matrix) {
+        matrices.add(matrix);
+//        if (matrix.getName().equals("A1C1")) {
+//            System.out.println("Matrix file: " + matrix.getMatrixFile().getAbsolutePath());
+//            System.out.println("Directory path: " + matrix.getMatrixFile().getParentFile().getAbsolutePath());
+//        }
     }
 
-    public synchronized void multiplyMatrices(String matrica1, String matrica2) throws InterruptedException, ExecutionException {
+    public void multiplyMatrices(String matrica1, String matrica2) {
         MyMatrix matrixA = null;
         MyMatrix matrixB = null;
-//            Iterator<MyMatrix> iterator2 = matrices.iterator();
-//            List<MyMatrix> result2 = new LinkedList<>();
-//            iterator2.forEachRemaining(result2::add);
-//            while(iterator2.hasNext()) {
-//                MyMatrix matrix = iterator2.next();
-//                if (matrix.getName().equalsIgnoreCase(matrica1)) {
-//                    matrixA = matrix;
-//                } else if (matrix.getName().equalsIgnoreCase(matrica2)) {
-//                    matrixB = matrix;
-//                }
-//            }
         for (MyMatrix matrix : matrices) {
-            System.out.println("Matrix name: " + matrix.getName());
             if (matrix.getName().equalsIgnoreCase(matrica1)) {
                 matrixA = matrix;
             } else if (matrix.getName().equalsIgnoreCase(matrica2)) {
@@ -55,7 +46,7 @@ public class MatrixBrain {
         }
 
         if (matrixA.getCols() == matrixB.getRows()) {
-            System.out.println("Matrices can be multiplied.");
+            System.out.println("Matrices are multiplied.");
             MatrixMultiplierTask task = new MatrixMultiplierTask(matrixA, matrixB);
             taskQueue.addTask(task);
         } else {
@@ -63,17 +54,24 @@ public class MatrixBrain {
         }
     }
 
-    // Save matrix to a file
-    public void saveMatrixToFile(MyMatrix matrix, String fileName) {
+    public void saveMatrixToFile(String matrixName, String fileName) {
+        MyMatrix matrix = null;
+        for(MyMatrix m : matrices) {
+            if(m.getName().equals(matrixName)) {
+                matrix = m;
+                break;
+            }
+        }
+        if(matrix == null) return;
         try (PrintWriter writer = new PrintWriter(fileName)) {
-            writer.println(matrix.getName());
-            writer.println(matrix.getRows() + " " + matrix.getCols());
-            for (int i = 0; i < matrix.getRows(); i++) {
-                for (int j = 0; j < matrix.getCols(); j++) {
-                    writer.print(matrix.getValue(i, j) + " ");
+            writer.println("matrix-name=" + matrix.getName() + ", rows=" + matrix.getRows() + ", cols=" + matrix.getCols());
+            for (int j = 0; j < matrix.getCols(); j++) {
+                for (int i = 0; i < matrix.getRows(); i++) {
+                    writer.println(i + "," + j + " = " + matrix.getValue(i, j) + " ");
                 }
                 writer.println();
             }
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -93,16 +91,32 @@ public class MatrixBrain {
         }
     }
 
-    // Clear all matrices
-    public void clearMatrices() {
-        matrices.clear();
+    public void clearMatrices(String fileName) {
+        for(MyMatrix matrix : matrices) {
+            if(matrix.getName().contains(fileName.toUpperCase())) {
+                System.out.println("Matrix " + matrix.getName() + " removed.");
+                matrices.remove(matrix);
+            }
+        }
     }
 
-//    public CopyOnWriteArrayList<MyMatrix> getMatrices() {
-//        return matrices;
-//    }
-//
-//    public TaskQueue getTaskQueue() {
-//        return taskQueue;
-//    }
+    public void clearMatricesFromDir(String argument) {
+        List<MyMatrix> toRemove = new ArrayList<>();
+        for(MyMatrix matrix : matrices) {
+            if (!isNameDuplicated(matrix.getName()) && matrix.getMatrixFile().getParent().equals(argument)) {
+                System.out.println("Matrix " + matrix.getName() + " removed.");
+                toRemove.add(matrix);
+            }
+        }
+        matrices.removeAll(toRemove);
+    }
+    private boolean isNameDuplicated(String name) {
+        if (name == null || name.length() % 2 != 0)
+            return false;
+
+        String firstHalf = name.substring(0, name.length() / 2);
+        String secondHalf = name.substring(name.length() / 2);
+
+        return firstHalf.equals(secondHalf);
+    }
 }

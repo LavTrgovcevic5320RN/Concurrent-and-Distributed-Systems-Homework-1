@@ -7,6 +7,7 @@ import main.models.TaskType;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TaskCoordinator implements Runnable {
     private TaskQueue taskQueue;
@@ -14,6 +15,7 @@ public class TaskCoordinator implements Runnable {
     private MatrixBrain matrixBrain;
     private long segmentSize;
     private long maxRowsSize;
+    private volatile boolean running = true;
 
     public TaskCoordinator(TaskQueue taskQueue, long segmentSize, long maxRowsSize, MatrixBrain matrixBrain) {
         this.taskQueue = taskQueue;
@@ -24,21 +26,24 @@ public class TaskCoordinator implements Runnable {
 
     @Override
     public synchronized void run() {
-        while (true) {
+        while (running) {
             Task task = taskQueue.getNextTask();
             if (task != null) {
                 executorService.submit(() -> {
                     try {
-                        if (task.getType() == TaskType.CREATE) {
+                        if(task.getType() == TaskType.POISON) {
+                            MatrixMultiplierTask.getExecutor().shutdown();
+                            this.running = false;
+                            taskQueue.addTask(task);
+                        }
+                        else if (task.getType() == TaskType.CREATE) {
                             ((MatrixFileTask)task).setSegmentSize(segmentSize);
                             MyMatrix myMatrix = task.initiate().get();
                             System.out.println("Matrix " + myMatrix.getName() + " created");
                             matrixBrain.addMatrix(myMatrix);
                             taskQueue.addTask(new MatrixMultiplierTask(myMatrix, myMatrix));
-
                         } else if (task.getType() == TaskType.MULTIPLY) {
                             MyMatrix result = task.initiate().get();
-//                            matrixBrain.displayMatrix(result);
                             matrixBrain.addMatrix(result);
                         }
                     } catch (Exception e) {
@@ -48,6 +53,7 @@ public class TaskCoordinator implements Runnable {
                 });
             }
         }
+        executorService.shutdown();
     }
 
     public TaskQueue getTaskQueue() {

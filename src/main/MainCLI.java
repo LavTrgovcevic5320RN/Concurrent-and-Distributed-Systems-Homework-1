@@ -1,7 +1,7 @@
 package main;
 
 import main.matrix.MatrixBrain;
-import main.tasks.MatrixMultiplierTask;
+import main.tasks.StopTask;
 import main.tasks.TaskCoordinator;
 import main.tasks.TaskQueue;
 
@@ -44,33 +44,6 @@ public class MainCLI implements Runnable {
         coordinatorThread.join();
         explorerThread.join();
         mainThread.join();
-//        taskQueue = new TaskQueue();
-//        taskCoordinator = new TaskCoordinator(taskQueue);
-//        systemExplorer = new SystemExplorer(taskQueue);
-//        matrixBrain = new MatrixBrain(taskQueue);
-//        readConfiguration();
-//
-//        Thread coordinatorThread = new Thread(taskCoordinator);
-//        Thread explorerThread = new Thread(systemExplorer);
-//
-//        coordinatorThread.start();
-//        explorerThread.start();
-//
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-//            String command;
-//            while (true) {
-//                System.out.print("Enter command: ");
-//                command = reader.readLine();
-//                if (command.equalsIgnoreCase("stop")) {
-//                    System.out.println("Exiting program. Goodbye!");
-//                    break;
-//                } else {
-//                    processCommand(command);
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
@@ -82,7 +55,9 @@ public class MainCLI implements Runnable {
                 System.out.print("Enter command: ");
                 command = reader.readLine();
                 if (command.equalsIgnoreCase("stop")) {
-                    System.out.println("Exiting program. Goodbye!");
+                    System.out.println("Stopping...");
+                    taskQueue.addTask(new StopTask());
+                    systemExplorer.setRunning(false);
                     break;
                 } else {
                     processCommand(command);
@@ -116,8 +91,49 @@ public class MainCLI implements Runnable {
             String[] matrice = parts[1].split(",");
             matrixBrain.multiplyMatrices(matrice[0], matrice[1]);
 
+        } else if (command.contains("save") && !command.contains("-async")) { // ex. multiply A1,c1
+            String[] parts = command.split(" ");
+            String matrixName, fileName;
+            if(parts[1].equals("-name")) {
+                matrixName = parts[2];
+                fileName = parts[4];
+            } else {
+                matrixName = parts[4];
+                fileName = parts[2];
+            }
+            matrixBrain.saveMatrixToFile(matrixName, fileName);
 
-        } else if (command.equalsIgnoreCase("help")) {
+        } else if (command.startsWith("clear")) {
+            String[] parts = command.split(" ");
+            if (parts.length == 2) {
+                String argument = parts[1];
+                File directory = new File(argument);
+                if (directory.isDirectory()) {
+                    System.out.println("Directory name: " + directory.getName());
+                    matrixBrain.clearMatricesFromDir(argument);
+                    File[] files = directory.listFiles();
+                    for (File file : files) {
+                        systemExplorer.getFileLastModifiedMap().remove(file);
+                    }
+
+                    systemExplorer.exploreDirectory(directory);
+                    System.out.println("Cleared and recollecting data for file: " + argument);
+                } else {
+                    matrixBrain.clearMatrices(argument);
+                    System.out.println("Directory name: " + directory.getName());
+                    systemExplorer.exploreDirectory(directory);
+                    for(File file : systemExplorer.getFileLastModifiedMap().keySet()) {
+                        if(file.getName().contains(argument)){
+                            System.out.println("Removing file: " + file.getName());
+                            systemExplorer.getFileLastModifiedMap().remove(file);
+                        }
+                    }
+                    System.out.println("Cleared and recollecting data for matrix: " + argument);
+                }
+            } else {
+                System.out.println("Error: Invalid clear command format");
+            }
+        }else if (command.equalsIgnoreCase("help")) {
             System.out.println("Available commands:");
             System.out.println(" - dir <dir_name>: Add directory to search");
             System.out.println(" - help: Display help information");

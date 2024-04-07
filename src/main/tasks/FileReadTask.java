@@ -12,7 +12,7 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
     private final File file;
     private final long startByte;
     private final long endByte;
-    private static final int THRESHOLD = 2000; // This should be set based on your specific use case
+    private static final int THRESHOLD = 2000;
     private MyMatrix matrix;
     private long segmentSize;
 
@@ -24,51 +24,30 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
         this.segmentSize = segmentSize;
     }
 
-//    @Override
-//    protected MyMatrix compute() {
-//        long length = endByte - startByte;
-//        if (length <= THRESHOLD) {
-//            System.out.println("Length: " + length);
-//            // Directly compute result
-//            return readMatrixFromFile(file, startByte, endByte);
-//        } else {
-//            // Split task
-//            long mid = startByte + length / 2;
-//            mid = adjustToLineStart(file, mid); // Ensure we split on a line boundary
-//            FileReadTask left = new FileReadTask(file, startByte, mid, matrix.getName(), matrix.getRows(), matrix.getCols(), segmentSize);
-//            FileReadTask right = new FileReadTask(file, mid, endByte, matrix.getName(), matrix.getRows(), matrix.getCols(), segmentSize);
-//            left.fork(); // Start left task
-//            MyMatrix rightResult = right.compute(); // Compute right task
-//            MyMatrix leftResult = left.join(); // Wait for left task
-//            return combineMatrices(leftResult, rightResult); // Combine results
-//        }
-//    }
     @Override
     protected MyMatrix compute() {
         long length = endByte - startByte;
 
-        if (length <= THRESHOLD || length <= segmentSize) { // Allow some room for adjustment
-//            System.out.println("Length: " + length);  // Uncomment for debugging
+        if (length <= THRESHOLD || length <= segmentSize) {
+//            System.out.println("Length: " + length);
             return readMatrixFromFile(file, startByte, endByte);
         } else {
             long splitPoint = startByte + segmentSize;
             splitPoint = adjustToNextLineStart(file, splitPoint);
 
-            // Check if the adjustment went too far
-            if (splitPoint - startByte > segmentSize * 2)  // If it went beyond an acceptable range
-                splitPoint = adjustToLineEnd(file, startByte + segmentSize / 2); // Go halfway up to the threshold
+            if (splitPoint - startByte > segmentSize * 2)
+                splitPoint = adjustToLineEnd(file, startByte + segmentSize / 2);
 
-            // Prevent splitting past the endByte
             if (splitPoint >= endByte)
                 splitPoint = endByte;
 
             FileReadTask left = new FileReadTask(file, startByte, splitPoint, matrix.getName(), matrix.getRows(), matrix.getCols(), segmentSize);
             FileReadTask right = new FileReadTask(file, splitPoint, endByte, matrix.getName(), matrix.getRows(), matrix.getCols(), segmentSize);
 
-            left.fork(); // Start left task
-            MyMatrix rightResult = right.compute(); // Compute right task
-            MyMatrix leftResult = left.join(); // Wait for left task
-            return combineMatrices(leftResult, rightResult); // Combine results
+            left.fork();
+            MyMatrix rightResult = right.compute();
+            MyMatrix leftResult = left.join();
+            return combineMatrices(leftResult, rightResult);
         }
     }
 
@@ -89,7 +68,6 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
     }
 
     private long adjustToNextLineStart(File file, long position) {
-        // This method finds the start of the next line after the given byte position
         long originalPosition = position;
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             raf.seek(position);
@@ -100,8 +78,7 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
                 }
                 position++;
             }
-            // If the next line start is too far from the original position,
-            // revert to the nearest line end before the original position
+
             if (position - originalPosition > segmentSize)
                 return adjustToLineEnd(file, originalPosition - segmentSize / 2);
 
@@ -157,7 +134,6 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
         MyMatrix combined = new MyMatrix(left.getName(), left.getRows(), left.getCols());
         combined.setMatrixFile(left.getMatrixFile());
 
-        // Copy values from the left matrix
         for (int row = 0; row < left.getRows(); row++) {
             for (int col = 0; col < left.getCols(); col++) {
                 if(!left.getValue(row, col).equals(BigInteger.ZERO))
@@ -165,7 +141,6 @@ public class FileReadTask extends RecursiveTask<MyMatrix> {
             }
         }
 
-        // Copy values from the right matrix
         for (int row = 0; row < right.getRows(); row++) {
             for (int col = 0; col < right.getCols(); col++) {
                 if(!right.getValue(row, col).equals(BigInteger.ZERO))

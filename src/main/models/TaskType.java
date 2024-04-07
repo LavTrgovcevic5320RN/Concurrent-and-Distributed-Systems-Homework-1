@@ -1,5 +1,5 @@
 package main.models;
 
 public enum TaskType {
-    CREATE, MULTIPLY
+    CREATE, MULTIPLY, POISON
 }

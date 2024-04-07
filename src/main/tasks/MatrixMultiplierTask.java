@@ -12,12 +12,12 @@ import java.util.concurrent.*;
 public class MatrixMultiplierTask implements Task {
     private final MyMatrix matrixA;
     private final MyMatrix matrixB;
-    private ExecutorService executor;
+    private static final int numThreads = Runtime.getRuntime().availableProcessors();
+    private static ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
     public MatrixMultiplierTask(MyMatrix matrixA, MyMatrix matrixB) {
         this.matrixA = matrixA;
         this.matrixB = matrixB;
-        this.executor = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -46,8 +46,6 @@ public class MatrixMultiplierTask implements Task {
             @Override
             public MyMatrix get() throws InterruptedException, ExecutionException {
                 MyMatrix result = new MyMatrix(matrixA.getName() + matrixB.getName(), matrixA.getRows(), matrixB.getCols());
-                int numThreads = Runtime.getRuntime().availableProcessors();
-                ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
                 int rowsPerThread = Math.max(3, matrixA.getRows() / numThreads);
                 int colsPerThread = Math.max(3, matrixB.getCols() / numThreads);
@@ -70,8 +68,6 @@ public class MatrixMultiplierTask implements Task {
                     }
                 }
 
-                executor.shutdown();
-                executor.awaitTermination(1, TimeUnit.HOURS);
                 return result;
             }
 
@@ -90,11 +86,12 @@ public class MatrixMultiplierTask implements Task {
         return matrixB;
     }
 
-    public ExecutorService getExecutor() {
+    public static ExecutorService getExecutor() {
         return executor;
     }
 
-    public void setExecutor(ExecutorService executor) {
-        this.executor = executor;
+    public static void setExecutor(ExecutorService executor) {
+        MatrixMultiplierTask.executor = executor;
     }
+
 }

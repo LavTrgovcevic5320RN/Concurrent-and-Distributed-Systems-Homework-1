@@ -7,9 +7,10 @@ import java.io.File;
 import java.util.HashMap;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SystemExplorer implements Runnable {
-    private final Map<File, Long> fileLastModifiedMap = new HashMap<>();
+    private final Map<File, Long> fileLastModifiedMap = new ConcurrentHashMap<>();
     private TaskQueue taskQueue;
     private File[] directoriesToExplore = new File[0];
     private boolean firstRun = true;
@@ -87,10 +88,6 @@ public class SystemExplorer implements Runnable {
     public SystemExplorer setRunning(boolean running) {
         this.running = running;
         return this;
-    }
-
-    public void recollectDataFromFile(String argument) {
-
     }
 
     public Map<File, Long> getFileLastModifiedMap() {

@@ -64,7 +64,7 @@ public class MatrixBrain {
         }
         if(matrix == null) return;
         try (PrintWriter writer = new PrintWriter(fileName)) {
-            writer.println("matrix-name=" + matrix.getName() + ", rows=" + matrix.getRows() + ", cols=" + matrix.getCols());
+            writer.println("matrix_name=" + matrix.getName() + ", rows=" + matrix.getRows() + ", cols=" + matrix.getCols());
             for (int j = 0; j < matrix.getCols(); j++) {
                 for (int i = 0; i < matrix.getRows(); i++) {
                     writer.println(i + "," + j + " = " + matrix.getValue(i, j) + " ");
@@ -93,7 +93,7 @@ public class MatrixBrain {
 
     private void printMatrixInfo(String matrixName) {
         for (MyMatrix matrix : matrices) {
-            if (matrix.getName().equals(matrixName)) {
+            if (matrix.getName().equals(matrixName)){
                 System.out.println("Matrix Name: " + matrix.getName());
                 System.out.println("Rows: " + matrix.getRows());
                 System.out.println("Columns: " + matrix.getCols());
@@ -134,7 +134,6 @@ public class MatrixBrain {
         return firstHalf.equals(secondHalf);
     }
 
-    // U MatrixBrain klasi
     public void displayMatrixInfo(String matrixName) {
         printMatrixInfo(matrixName);
     }

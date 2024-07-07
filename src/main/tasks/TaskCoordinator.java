@@ -14,14 +14,15 @@ public class TaskCoordinator implements Runnable {
     private ExecutorService executorService;
     private MatrixBrain matrixBrain;
     private long segmentSize;
-    private long maxRowsSize;
+    private int maxRowsSize;
     private volatile boolean running = true;
 
-    public TaskCoordinator(TaskQueue taskQueue, long segmentSize, long maxRowsSize, MatrixBrain matrixBrain) {
+    public TaskCoordinator(TaskQueue taskQueue, long segmentSize, int maxRowsSize, MatrixBrain matrixBrain) {
         this.taskQueue = taskQueue;
         this.executorService = Executors.newCachedThreadPool();
         this.matrixBrain = matrixBrain;
         this.segmentSize = segmentSize;
+        this.maxRowsSize = maxRowsSize;
     }
 
     @Override
@@ -43,6 +44,7 @@ public class TaskCoordinator implements Runnable {
                             matrixBrain.addMatrix(myMatrix);
                             taskQueue.addTask(new MatrixMultiplierTask(myMatrix, myMatrix));
                         } else if (task.getType() == TaskType.MULTIPLY) {
+                            ((MatrixMultiplierTask)task).setMaxRowsSize(maxRowsSize);
                             MyMatrix result = task.initiate().get();
                             matrixBrain.addMatrix(result);
                         }
@@ -88,11 +90,11 @@ public class TaskCoordinator implements Runnable {
         this.segmentSize = segmentSize;
     }
 
-    public long getMaxRowsSize() {
+    public int getMaxRowsSize() {
         return maxRowsSize;
     }
 
-    public void setMaxRowsSize(long maxRowsSize) {
+    public void setMaxRowsSize(int maxRowsSize) {
         this.maxRowsSize = maxRowsSize;
     }
 }

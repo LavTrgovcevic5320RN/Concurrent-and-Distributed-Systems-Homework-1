@@ -14,6 +14,7 @@ public class MatrixMultiplierTask implements Task {
     private final MyMatrix matrixB;
     private static final int numThreads = Runtime.getRuntime().availableProcessors();
     private static ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+    private static int maxRowsSize;
 
     public MatrixMultiplierTask(MyMatrix matrixA, MyMatrix matrixB) {
         this.matrixA = matrixA;
@@ -94,4 +95,11 @@ public class MatrixMultiplierTask implements Task {
         MatrixMultiplierTask.executor = executor;
     }
 
+    public static int getMaxRowsSize() {
+        return maxRowsSize;
+    }
+
+    public static void setMaxRowsSize(int maxRowsSize) {
+        MatrixMultiplierTask.maxRowsSize = maxRowsSize;
+    }
 }
